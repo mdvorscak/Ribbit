@@ -15,5 +15,8 @@
     <string name="title_activity_sign_up">SignUpActivity</string>
     <string name="email_hint">Email</string>
     <string name="sign_up_button_label">Sign Up</string>
+    <string name="password_required_error">Password is a required</string>
+    <string name="username_required_error">Username is a required</string>
+    <string name="signup_error_dialog_title">Error</string>
 
 </resources>
