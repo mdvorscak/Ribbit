@@ -10,10 +10,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
+
+import java.util.HashMap;
 
 
 public class SignUpActivity extends ActionBarActivity {
@@ -34,11 +37,25 @@ public class SignUpActivity extends ActionBarActivity {
         mPasswordField = (EditText) findViewById(R.id.passwordField);
         mEmailField = (EditText) findViewById(R.id.emailField);
 
+        HashMap<String, TextView> fields = new HashMap<String, TextView>();
+        fields.put("username", mUserNameField);
+        fields.put("password", mPasswordField);
+        fields.put("email", mEmailField);
+
+        final InputForm form = new InputForm(fields);
+        InputForm.EmptyCheck emptyCheck = InputForm.EmptyCheck.getInstance();
+        form.addValidationCheck("username", emptyCheck);
+        form.addValidationCheck("password", InputForm.ValidPasswordCheck.getInstance());
+        form.addValidationCheck("password", emptyCheck);
+        form.addValidationCheck("email", InputForm.ValidEmailCheck.getInstance());
+        form.addValidationCheck("email", emptyCheck);
+
         Button button = (Button) findViewById(R.id.signUpButton);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(areFieldsValid()){
+                if(form.areFieldsValid()){
+                    HashMap<String, String> formValues = form.extractFormValues();
                     ParseUser newUser = new ParseUser();
                     newUser.setPassword(mPassword);
                     newUser.setEmail(mEmail);
@@ -71,63 +88,6 @@ public class SignUpActivity extends ActionBarActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
-    private boolean areFieldsValid() {
-        // Reset errors.
-        mUserNameField.setError(null);
-        mPasswordField.setError(null);
-        mEmailField.setError(null);
-
-        // Store values at the time of the login attempt.
-        mUserName = mUserNameField.getText().toString();
-        mEmail = mEmailField.getText().toString();
-        mPassword = mPasswordField.getText().toString();
-
-        boolean valid = true;
-        EditText focusText = null;
-
-        //Check in reverse form order, so the first thing wrong will be focused on
-
-        // Check for a valid email address.
-        if (!isEmailValid(mEmail)) {
-            mEmailField.setError(getString(R.string.error_invalid_email));
-            focusText = mEmailField;
-            valid = false;
-        }
-
-        // Check for a valid password, if the user entered one.
-        if(TextUtils.isEmpty(mPassword)){
-            focusText = mPasswordField;
-            mPasswordField.setError(getString(R.string.password_required_error));
-            valid = false;
-        } else if (!isPasswordValid(mPassword)) {
-            mPasswordField.setError(getString(R.string.error_invalid_password));
-            focusText = mPasswordField;
-            valid = false;
-        }
-
-        if(TextUtils.isEmpty(mUserName)){
-            focusText = mUserNameField;
-            mUserNameField.setError(getString(R.string.username_required_error));
-            valid = false;
-        }
-
-        if (!valid) {
-            focusText.requestFocus();
-        }
-        return valid;
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Implement password checking (length, characters, etc.)
-        return true;
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
