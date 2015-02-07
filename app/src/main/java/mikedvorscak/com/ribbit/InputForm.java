@@ -12,7 +12,7 @@ import java.util.Map;
  * Used for form validation and value extraction
  */
 public class InputForm {
-    
+
     //TODO:Add validation order
     private HashMap<String, TextView> mFieldMap;
     private HashMap<String, String> mFieldValuesMap = new HashMap<String, String>();

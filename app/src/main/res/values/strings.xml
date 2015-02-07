@@ -7,6 +7,7 @@
     <string name="title_section3">Section 3</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_logout">Logout</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="password_hint">Password</string>
     <string name="username_hint">Username</string>
@@ -17,6 +18,9 @@
     <string name="sign_up_button_label">Sign Up</string>
     <string name="password_required_error">Password is a required</string>
     <string name="username_required_error">Username is a required</string>
-    <string name="signup_error_dialog_title">Error</string>
+    <string name="error_dialog_title">Error</string>
+    <string name="username_key">username</string>
+    <string name="password_key">password</string>
+    <string name="email_key">email</string>
 
 </resources>
