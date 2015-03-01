@@ -3,13 +3,13 @@ package mikedvorscak.com.ribbit;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -209,8 +209,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                         Utils.showToast(this, R.string.error_file_size_too_large);
                         return;
                     }
-
-
                 }
 
             } else {
@@ -219,8 +217,30 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 mediaScanIntent.setData(mMediaUri);
                 sendBroadcast(mediaScanIntent);
             }
+
+            Intent recipientsIntent = new Intent(this, RecipientsActivity.class);
+            recipientsIntent.setData(mMediaUri);
+            String fileType = getFileType(requestCode);
+            recipientsIntent.putExtra(ParseConstants.KEY_FILE_TYPE, fileType);
+            startActivity(recipientsIntent);
         } else if (resultCode != RESULT_CANCELED){
             Utils.showErrorToast(this);
+        }
+    }
+
+    private String getFileType(int requestCode) {
+        switch (requestCode){
+            case PICK_PHOTO:
+                return ParseConstants.TYPE_IMAGE;
+            case TAKE_PHOTO:
+                return ParseConstants.TYPE_IMAGE;
+            case PICK_VIDEO:
+                return ParseConstants.TYPE_VIDEO;
+            case TAKE_VIDEO:
+                return ParseConstants.TYPE_VIDEO;
+            default:
+                Log.e(TAG, "Unknown request code: " + requestCode);
+                return null;
         }
     }
 

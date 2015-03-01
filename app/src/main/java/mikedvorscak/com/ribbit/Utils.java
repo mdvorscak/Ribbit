@@ -4,7 +4,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.widget.Toast;
+
+import java.util.Objects;
 
 /**
  * Created by mike on 2/7/15.
@@ -24,6 +27,20 @@ public class Utils {
         builder.setItems(items, listener);
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    public static void switchActivity(Context fromContext, Class toClass, Boolean clearHistory, Uri extraData){
+        Intent intent = new Intent(fromContext, toClass);
+        if(clearHistory) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        }
+        intent.setData(extraData);
+        fromContext.startActivity(intent);
+    }
+
+    public static void switchActivity(Context fromContext, Class toClass, Uri extraData, Object extra){
+        switchActivity(fromContext, toClass, false, extraData);
     }
 
     public static void switchActivity(Context fromContext, Class toClass, Boolean clearHistory){
