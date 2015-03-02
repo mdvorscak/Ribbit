@@ -48,15 +48,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     protected Uri mMediaUri;
 
     protected void onCreate(Bundle savedInstanceState) {
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         ParseUser currentUser = ParseUser.getCurrentUser();
         if(currentUser == null) {
             Utils.switchActivity(this, LoginActivity.class);
-        } else {
-
         }
 
         // Set up the action bar.

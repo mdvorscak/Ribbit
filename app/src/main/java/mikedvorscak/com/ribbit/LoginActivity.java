@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.parse.LogInCallback;
@@ -20,14 +21,20 @@ public class LoginActivity extends ActionBarActivity {
     protected TextView mSignUpTextView;
     protected EditText mUserNameField;
     protected EditText mPasswordField;
+    protected ProgressBar mProgressBar;
+
     private String mUserName;
     private String mPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_login);
+
+        //Hide the action bar
+        getSupportActionBar().hide();
+
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         mSignUpTextView = (TextView) findViewById(R.id.signUpText);
         mSignUpTextView.setOnClickListener(new View.OnClickListener() {
@@ -65,11 +72,11 @@ public class LoginActivity extends ActionBarActivity {
                     mUserName = formValues.get(USERNAME_KEY);
                     mPassword = formValues.get(PASSWORD_KEY);
 
-                    setProgressBarIndeterminateVisibility(true);
+                    toggleProgressBar(true);
                     ParseUser.logInInBackground(mUserName, mPassword, new LogInCallback() {
                         @Override
                         public void done(ParseUser parseUser, ParseException e) {
-                            setProgressBarIndeterminateVisibility(false);
+                            toggleProgressBar(false);
                             if(e == null){
                                 Utils.switchActivity(LoginActivity.this, MainActivity.class);
                             } else {
@@ -82,5 +89,13 @@ public class LoginActivity extends ActionBarActivity {
                 }
             }
         });
+    }
+
+    private void toggleProgressBar(boolean on) {
+        if(on){
+            mProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.parse.ParseException;
@@ -16,10 +17,14 @@ import java.util.HashMap;
 
 
 public class SignUpActivity extends ActionBarActivity {
+    //TODO:Add butterknife to every activity class
 
     protected EditText mUserNameField;
     protected EditText mEmailField;
     protected EditText mPasswordField;
+    protected ProgressBar mProgressBar;
+    protected Button mCancelButton;
+
     private String mUserName;
     private String mPassword;
     private String mEmail;
@@ -27,12 +32,15 @@ public class SignUpActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_sign_up);
+
+        getSupportActionBar().hide();
 
         final String USERNAME_KEY = getString(R.string.username_key);
         final String PASSWORD_KEY = getString(R.string.password_key);
         final String EMAIL_KEY = getString(R.string.email_key);
+
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         mUserNameField = (EditText) findViewById(R.id.userNameField);
         mPasswordField = (EditText) findViewById(R.id.passwordField);
@@ -55,6 +63,7 @@ public class SignUpActivity extends ActionBarActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if(form.areFieldsValid()){
                     HashMap<String, String> formValues = form.extractFormValues();
                     mUserName = formValues.get(USERNAME_KEY);
@@ -66,11 +75,11 @@ public class SignUpActivity extends ActionBarActivity {
                     newUser.setEmail(mEmail);
                     newUser.setUsername(mUserName);
 
-                    setProgressBarIndeterminateVisibility(true);
+                    toggleProgressBar(true);
                     newUser.signUpInBackground(new SignUpCallback() {
                         @Override
                         public void done(ParseException e) {
-                            setProgressBarIndeterminateVisibility(false);
+                            toggleProgressBar(false);
                             if(e == null){
                                 //Success!
                                 Utils.switchActivity(SignUpActivity.this, MainActivity.class);
@@ -84,5 +93,21 @@ public class SignUpActivity extends ActionBarActivity {
                 }
             }
         });
+
+        mCancelButton = (Button) findViewById(R.id.cancelButton);
+        mCancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
+
+    private void toggleProgressBar(boolean on) {
+        if(on){
+            mProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+        }
     }
 }
