@@ -2,7 +2,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="mikedvorscak.com.ribbit.RecipientsActivity">
+                tools:context="mikedvorscak.com.ribbit.ui.RecipientsActivity">
 
     <ListView
         android:layout_width="match_parent"
