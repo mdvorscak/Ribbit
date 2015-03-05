@@ -50,6 +50,8 @@
     <string name="content_description_background">Ribbit Frog Background Image</string>
     <string name="cancel_button">CANCEL</string>
     <string name="button_divider_label">Button Divider</string>
+    <string name="content_desc_message_icon">Message Icon</string>
+    <string name="content_desc_user_avatar">User avatar</string>
 
 
 </resources>

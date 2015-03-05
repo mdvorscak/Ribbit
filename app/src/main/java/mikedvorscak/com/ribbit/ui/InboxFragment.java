@@ -6,10 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -33,11 +35,26 @@ public class InboxFragment extends ListFragment{
 
     public static final String TAG = ListFragment.class.getSimpleName();
 
+    protected SwipeRefreshLayout mSwipeRefreshLayout;
+    protected SwipeRefreshLayout.OnRefreshListener mOnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            retrieveMessages(getActivity());
+        }
+    };
+
     protected List<ParseObject> mMessages;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_inbox, container, false);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
+        mSwipeRefreshLayout.setOnRefreshListener(mOnRefreshListener);
+        mSwipeRefreshLayout.setColorSchemeColors(R.color.swipeRefresh1,
+                                                R.color.swipeRefresh2,
+                                                R.color.swipeRefresh3,
+                                                R.color.swipeRefresh4);
         return rootView;
     }
 
@@ -46,6 +63,11 @@ public class InboxFragment extends ListFragment{
         super.onResume();
         final FragmentActivity currentActivity = getActivity();
         currentActivity.setProgressBarIndeterminateVisibility(true);
+
+        retrieveMessages(currentActivity);
+    }
+
+    private void retrieveMessages(final FragmentActivity currentActivity) {
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(ParseConstants.CLASS_MESSAGES);
         query.whereEqualTo(ParseConstants.KEY_RECIPIENT_IDS, ParseUser.getCurrentUser().getObjectId());
         query.addDescendingOrder(ParseConstants.KEY_CREATED_AT);
@@ -54,6 +76,11 @@ public class InboxFragment extends ListFragment{
             public void done(List<ParseObject> messages, ParseException e) {
                 currentActivity.setProgressBarIndeterminateVisibility(false);
                 Context context = getListView().getContext();
+
+                if(mSwipeRefreshLayout.isRefreshing()){
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+
                 if(e == null){
                     mMessages = messages;
 
