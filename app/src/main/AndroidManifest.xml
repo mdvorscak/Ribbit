@@ -64,8 +64,7 @@
             android:name=".ui.RecipientsActivity"
             android:label="@string/title_activity_recipients"
             android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/ActionBar.Transparent.Ribbit" >
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MainActivity" />

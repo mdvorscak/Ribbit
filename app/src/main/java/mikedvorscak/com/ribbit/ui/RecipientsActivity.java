@@ -1,96 +1,93 @@
 package mikedvorscak.com.ribbit.ui;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
-import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseRelation;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import mikedvorscak.com.ribbit.R;
+import mikedvorscak.com.ribbit.adapters.RecipientsAdapter;
 import mikedvorscak.com.ribbit.utils.FileHelper;
 import mikedvorscak.com.ribbit.utils.ParseConstants;
-import mikedvorscak.com.ribbit.R;
 import mikedvorscak.com.ribbit.utils.Utils;
 
 
-public class RecipientsActivity extends ListActivity {
+public class RecipientsActivity extends ActionBarActivity implements ActionBar.TabListener{
 
     public static final String TAG = RecipientsActivity.class.getSimpleName();
-
-    protected List<ParseUser> mFriends;
-    protected ParseRelation<ParseUser> mFriendsRelation;
-    protected ParseUser mCurrentUser;
     protected MenuItem mSendMenuItem;
+    protected ViewPager mViewPager;
+    protected android.support.v4.app.FragmentManager mFragmentManager;
+    protected RecipientsAdapter mRecipientsAdapter;
+    protected ArrayList<String> mRecipientIds;
+
     protected Uri mMediaUri;
     protected String mFileType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_recipients);
-
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
         mMediaUri = getIntent().getData();
         mFileType = getIntent().getExtras().getString(ParseConstants.KEY_FILE_TYPE);
+
+        // Set up the action bar.
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        //actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+
+        // Create the adapter that will return a fragment for each of the three
+        // primary sections of the activity.
+        mFragmentManager = getSupportFragmentManager();
+        mRecipientsAdapter = new RecipientsAdapter(this, mFragmentManager);
+
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.recipients_pager);
+        mViewPager.setAdapter(mRecipientsAdapter);
+
+        // When swiping between different sections, select the corresponding
+        // tab. We can also use ActionBar.Tab#select() to do this if we have
+        // a reference to the Tab.
+        //Currently only 1 tab
+//        viewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+//            @Override
+//            public void onPageSelected(int position) {
+//                actionBar.setSelectedNavigationItem(position);
+//            }
+//        });
+        //Currently just 1 tab
+        // For each of the sections in the app, add a tab to the action bar.
+        //for (int i = 0; i < sectionsPagerAdapter.getCount(); i++) {
+            // Create a tab with text corresponding to the page title defined by
+            // the adapter. Also specify this Activity object, which implements
+            // the TabListener interface, as the callback (listener) for when
+            // this tab is selected.
+        ActionBar.Tab tab = actionBar.newTab()
+                .setText(mRecipientsAdapter.getPageTitle(0))
+                .setTabListener(this);
+        actionBar.addTab(tab);
+        mViewPager.setCurrentItem(tab.getPosition());
+        //}
+
     }
 
     public void onResume() {
         super.onResume();
-
-        mCurrentUser = ParseUser.getCurrentUser();
-        mFriendsRelation = mCurrentUser.getRelation(ParseConstants.KEY_FRIENDS_RELATION);
-        ParseQuery<ParseUser> query = mFriendsRelation.getQuery();
-        query.addAscendingOrder(ParseConstants.KEY_USERNAME);
-
-        setProgressBarIndeterminateVisibility(true);
-
-        query.findInBackground(new FindCallback<ParseUser>() {
-
-            Context context = RecipientsActivity.this;
-            @Override
-            public void done(List<ParseUser> friends, ParseException e) {
-                setProgressBarIndeterminateVisibility(false);
-                if(e == null){
-                    mFriends = friends;
-
-                    //TODO: Refactor, this is copypasta from EditFriendsActivity
-                    String[] usernames = new String[mFriends.size()];
-                    int i = 0;
-                    for(ParseUser user: mFriends){
-                        usernames[i] = user.getUsername();
-                        i++;
-                    }
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
-                            android.R.layout.simple_list_item_checked, usernames);
-                    setListAdapter(adapter);
-                } else {
-                    Log.e(TAG, e.getMessage());
-                    Utils.displayErrorDialog(e.getMessage(),
-                            getString(R.string.error_dialog_title),
-                            context);
-                }
-            }
-        });
     }
 
 
@@ -100,6 +97,50 @@ public class RecipientsActivity extends ListActivity {
         getMenuInflater().inflate(R.menu.menu_recipients, menu);
         mSendMenuItem = menu.getItem(0);
         return true;
+    }
+
+    public void setRecipientIds(ArrayList<String> recipientIds){
+        mRecipientIds = recipientIds;
+    }
+
+    protected ParseObject createMessage(){
+        ParseObject message = new ParseObject(ParseConstants.CLASS_MESSAGES);
+        ParseUser currentUser = ParseUser.getCurrentUser();
+        message.put(ParseConstants.KEY_SENDER_ID, currentUser.getObjectId());
+        message.put(ParseConstants.KEY_SENDER_NAME, currentUser.getUsername());
+        message.put(ParseConstants.KEY_RECIPIENT_IDS, mRecipientIds);
+        message.put(ParseConstants.KEY_FILE_TYPE, mFileType);
+
+        byte[] fileBytes = FileHelper.getByteArrayFromFile(this, mMediaUri);
+
+        if(fileBytes == null){
+            return null;
+        } else {
+            if(mFileType.equals(ParseConstants.TYPE_IMAGE)){
+                fileBytes = FileHelper.reduceImageForUpload(fileBytes);
+            }
+
+            String fileName = FileHelper.getFileName(this, mMediaUri, mFileType);
+            ParseFile file = new ParseFile(fileName, fileBytes);
+            message.put(ParseConstants.KEY_FILE, file);
+            return message;
+        }
+    }
+
+
+    protected void sendMessage(ParseObject message){
+        message.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                Context context = RecipientsActivity.this;
+                if(e == null){
+                    Utils.showToast(context, R.string.message_sent);
+                } else {
+                    Utils.displayErrorDialog(context.getString(R.string.error_sending_message),
+                            context.getString(R.string.error_selecting_file_title), context);
+                }
+            }
+        });
     }
 
     @Override
@@ -120,58 +161,22 @@ public class RecipientsActivity extends ListActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public MenuItem getMainMenuItem(){
+        return mSendMenuItem;
+    }
+
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
-        mSendMenuItem.setVisible(l.getCheckedItemCount() > 0);
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+        // When the given tab is selected, switch to the corresponding page in
+        // the ViewPager.
+        mViewPager.setCurrentItem(tab.getPosition());
     }
 
-    protected ParseObject createMessage(){
-        ParseObject message = new ParseObject(ParseConstants.CLASS_MESSAGES);
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        message.put(ParseConstants.KEY_SENDER_ID, currentUser.getObjectId());
-        message.put(ParseConstants.KEY_SENDER_NAME, currentUser.getUsername());
-        message.put(ParseConstants.KEY_RECIPIENT_IDS, getRecipientIds());
-        message.put(ParseConstants.KEY_FILE_TYPE, mFileType);
-
-        byte[] fileBytes = FileHelper.getByteArrayFromFile(this, mMediaUri);
-
-        if(fileBytes == null){
-            return null;
-        } else {
-            if(mFileType.equals(ParseConstants.TYPE_IMAGE)){
-                fileBytes = FileHelper.reduceImageForUpload(fileBytes);
-            }
-
-            String fileName = FileHelper.getFileName(this, mMediaUri, mFileType);
-            ParseFile file = new ParseFile(fileName, fileBytes);
-            message.put(ParseConstants.KEY_FILE, file);
-            return message;
-        }
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
     }
 
-    protected ArrayList<String> getRecipientIds(){
-        ArrayList<String> recipientIds = new ArrayList<String>();
-        for(int i = 0; i < getListView().getCount(); i++){
-            if(getListView().isItemChecked(i)){
-                recipientIds.add(mFriends.get(i).getObjectId());
-            }
-        }
-        return recipientIds;
-    }
-
-    protected void sendMessage(ParseObject message){
-        message.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                Context context = RecipientsActivity.this;
-                if(e == null){
-                    Utils.showToast(context, R.string.message_sent);
-                } else {
-                    Utils.displayErrorDialog(context.getString(R.string.error_sending_message),
-                            context.getString(R.string.error_selecting_file_title), context);
-                }
-            }
-        });
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
     }
 }

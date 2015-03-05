@@ -1,60 +1,74 @@
 package mikedvorscak.com.ribbit.ui;
 
+import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseRelation;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import mikedvorscak.com.ribbit.utils.ParseConstants;
 import mikedvorscak.com.ribbit.R;
+
+import mikedvorscak.com.ribbit.utils.FileHelper;
+import mikedvorscak.com.ribbit.utils.ParseConstants;
 import mikedvorscak.com.ribbit.utils.Utils;
 
-/**
- * Created by mike on 2/16/15.
- */
-public class FriendsFragment extends ListFragment{
+public class RecipientsFragment extends ListFragment {
 
-    public static final String TAG = FriendsFragment.class.getSimpleName();
+    private static final String TAG = RecipientsFragment.class.getSimpleName();
 
-    protected List<ParseUser> mFriends;
     protected ParseRelation<ParseUser> mFriendsRelation;
     protected ParseUser mCurrentUser;
+    protected Activity mParentActivity;
+    protected Context mContext;
+    protected List<ParseUser> mFriends;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_friends, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_recipients, container, false);
         return rootView;
     }
 
     public void onResume() {
         super.onResume();
+        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
+        mParentActivity = getActivity();
+        mContext = getListView().getContext();
 
         mCurrentUser = ParseUser.getCurrentUser();
         mFriendsRelation = mCurrentUser.getRelation(ParseConstants.KEY_FRIENDS_RELATION);
         ParseQuery<ParseUser> query = mFriendsRelation.getQuery();
         query.addAscendingOrder(ParseConstants.KEY_USERNAME);
 
-        //getActivity().setProgressBarIndeterminateVisibility(true);
-
         query.findInBackground(new FindCallback<ParseUser>() {
 
-            Context context = getListView().getContext();
             @Override
             public void done(List<ParseUser> friends, ParseException e) {
-                //getActivity().setProgressBarIndeterminateVisibility(false);
                 if(e == null){
                     mFriends = friends;
 
@@ -65,16 +79,33 @@ public class FriendsFragment extends ListFragment{
                         usernames[i] = user.getUsername();
                         i++;
                     }
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
-                            android.R.layout.simple_list_item_1, usernames);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext,
+                            android.R.layout.simple_list_item_checked, usernames);
                     setListAdapter(adapter);
                 } else {
-                    Log.e(TAG, e.getMessage());
                     Utils.displayErrorDialog(e.getMessage(),
                             getString(R.string.error_dialog_title),
-                            context);
+                            mContext);
                 }
             }
         });
     }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        ((RecipientsActivity)getActivity()).getMainMenuItem().setVisible(l.getCheckedItemCount() > 0);
+        ((RecipientsActivity)getActivity()).setRecipientIds(getRecipientIds());
+    }
+
+    protected ArrayList<String> getRecipientIds(){
+        ArrayList<String> recipientIds = new ArrayList<String>();
+        for(int i = 0; i < getListView().getCount(); i++){
+            if(getListView().isItemChecked(i)){
+                recipientIds.add(mFriends.get(i).getObjectId());
+            }
+        }
+        return recipientIds;
+    }
+
 }
