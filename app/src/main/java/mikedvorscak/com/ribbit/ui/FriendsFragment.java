@@ -36,6 +36,14 @@ public class FriendsFragment extends Fragment {
     protected ParseUser mCurrentUser;
     protected GridView mGridView;
 
+    public List<ParseUser> getFriends(){
+        return mFriends;
+    }
+
+    public ParseRelation<ParseUser> getFriendsRelation(){
+        return mFriendsRelation;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
