@@ -7,9 +7,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.widget.Toast;
 
+import com.parse.ParseInstallation;
+import com.parse.ParseUser;
+
 import java.util.Objects;
 
 import mikedvorscak.com.ribbit.R;
+
+import static mikedvorscak.com.ribbit.utils.ParseConstants.KEY_USER_ID;
 
 /**
  * Created by mike on 2/7/15.
@@ -66,5 +71,11 @@ public class Utils {
 
     public static void showToast(Context context, int strResourceId){
         Toast.makeText(context, context.getString(strResourceId), Toast.LENGTH_LONG).show();
+    }
+
+    public static void registerUserInstall(ParseUser user){
+        ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+        installation.put(ParseConstants.KEY_USER_ID, user.getObjectId());
+        installation.saveInBackground();
     }
 }

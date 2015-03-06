@@ -81,6 +81,7 @@ public class LoginActivity extends ActionBarActivity {
                         public void done(ParseUser parseUser, ParseException e) {
                             toggleProgressBar(false);
                             if(e == null){
+                                Utils.registerUserInstall(parseUser);
                                 Utils.switchActivity(LoginActivity.this, MainActivity.class);
                             } else {
                                 Utils.displayErrorDialog(e.getMessage(),

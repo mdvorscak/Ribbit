@@ -85,6 +85,7 @@ public class SignUpActivity extends ActionBarActivity {
                             toggleProgressBar(false);
                             if(e == null){
                                 //Success!
+                                Utils.registerUserInstall(ParseUser.getCurrentUser());
                                 Utils.switchActivity(SignUpActivity.this, MainActivity.class);
                             } else {
                                 Utils.displayErrorDialog(e.getMessage(),

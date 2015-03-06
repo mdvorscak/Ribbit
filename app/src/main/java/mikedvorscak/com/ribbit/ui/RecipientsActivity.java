@@ -13,7 +13,10 @@ import android.view.MenuItem;
 
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
+import com.parse.ParsePush;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -135,12 +138,24 @@ public class RecipientsActivity extends ActionBarActivity implements ActionBar.T
                 Context context = RecipientsActivity.this;
                 if(e == null){
                     Utils.showToast(context, R.string.message_sent);
+                    sendPushNotifications();
                 } else {
                     Utils.displayErrorDialog(context.getString(R.string.error_sending_message),
                             context.getString(R.string.error_selecting_file_title), context);
                 }
             }
         });
+    }
+
+    protected void sendPushNotifications() {
+        ParseQuery<ParseInstallation> query = ParseInstallation.getQuery();
+        query.whereContainedIn(ParseConstants.KEY_USER_ID, mRecipientIds);
+
+        ParsePush push = new ParsePush();
+        push.setQuery(query);
+        push.setMessage(getString(R.string.push_message,
+                                    ParseUser.getCurrentUser().getUsername()));
+        push.sendInBackground();
     }
 
     @Override
